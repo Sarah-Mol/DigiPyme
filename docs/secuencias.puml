@@ -1,0 +1,198 @@
+@startuml DigiPyme_Secuencias
+' Diagrama de Secuencias – DigiPyme
+' Flujo completo CU-1 a CU-5
+' Detalle de CU-3 con reglas, modelo y validador
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+
+title Flujo completo: CU-1 → CU-5 (caso "Abarrotes Doña Lupe")
+
+actor "Dueño del\nnegocio" as usuario
+participant "Interfaz web\n(React)" as frontend
+participant "API REST\n(FastAPI)" as api
+participant "Orquestador\n«Façade»" as orq
+participant "Agente de\ncontexto" as agCtx
+participant "Proxy caché\nDENUE «Proxy»" as cache
+participant "Adaptador\nDENUE «Adapter»" as denue
+participant "Agente de\ndiagnóstico" as agDiag
+participant "Agente de\napoyos" as agAp
+participant "Catálogo\napoyos (JSON)" as catalogo
+participant "Proveedor\nmodelo «Strategy»" as modelo
+participant "Constructor\nreporte «Builder»" as builder
+
+== CU-1: Registrar perfil del negocio ==
+
+usuario -> frontend : Responde cuestionario\n(3 pantallas, ≤15 preguntas)
+activate frontend
+
+frontend -> frontend : Validación en cliente\n(campos obligatorios)
+frontend -> api : POST /diagnostico\n{giro, ubicacion, tamano, evaluaciones}
+activate api
+
+api -> api : Validar PerfilNegocio\n(rechaza incompletos)
+
+== CU-2: Consultar negocios similares (Agente de contexto) ==
+
+api -> orq : diagnosticar(perfil)
+activate orq
+
+orq -> agCtx : ejecutar(perfil)
+activate agCtx
+
+note right of agCtx
+  Template Method:
+  recolectar() → razonar() → validar()
+end note
+
+agCtx -> agCtx : recolectar()
+agCtx -> cache : cuantificar("14098", "461110")
+activate cache
+cache -> cache : ¿Está en caché?
+
+alt Caché disponible
+    cache --> agCtx : total_similares (caché)
+else Sin caché
+    cache -> denue : cuantificar("14098", "461110")
+    activate denue
+    denue -> denue : GET DENUE API\n+ traducir JSON → ResumenZona
+    denue --> cache : datos traducidos
+    deactivate denue
+    cache -> cache : Guardar en caché
+    cache --> agCtx : total_similares
+end
+deactivate cache
+
+agCtx -> cache : buscar_area("14098", "461110")
+activate cache
+cache --> agCtx : lista de establecimientos
+deactivate cache
+
+agCtx -> agCtx : razonar()
+agCtx -> modelo : generar(prompt_resumen, datos_zona)
+activate modelo
+modelo --> agCtx : texto del resumen en lenguaje sencillo
+deactivate modelo
+
+agCtx -> agCtx : validar()\n(verificar formato)
+
+agCtx --> orq : ResumenZona
+deactivate agCtx
+
+frontend <-- api : progreso: "Buscando negocios como el tuyo..."
+usuario <-- frontend : Mensaje de progreso
+
+== CU-3: Generar diagnóstico (Agente de diagnóstico) — detalle ==
+
+orq -> agDiag : ejecutar(perfil, resumen_zona)
+activate agDiag
+
+agDiag -> agDiag : recolectar()\nObtener evaluaciones del perfil
+
+agDiag -> agDiag : razonar()\n**Paso 1 (código):**\nPara cada proceso:\n  brecha = 3 − nivel_actual\n  prioridad = brecha × impacto[giro]\nOrdenar por prioridad desc
+
+note right of agDiag
+  Ejemplo "Abarrotes Doña Lupe":
+  - Inventario: nivel=1, impacto=3 → (3-1)×3 = 6
+  - Ventas/cobro: nivel=0, impacto=3 → (3-0)×3 = 9 ← máxima
+  - Facturación: nivel=0, impacto=2 → (3-0)×2 = 6
+  Las reglas calculan; el modelo NO decide.
+end note
+
+agDiag -> modelo : generar(prompt_razon, procesos_priorizados)
+activate modelo
+note right of modelo
+  Prompt: "Redacta para cada proceso
+  la razón y un primer paso concreto.
+  Usa lenguaje sencillo."
+end note
+modelo --> agDiag : razón y primer_paso por proceso
+deactivate modelo
+
+agDiag -> agDiag : validar()\n**Verificar:**\n- Formato JSON esperado\n- Solo procesos existentes\n- Cada recomendación tiene razón y fuente
+
+alt Validación falla
+    agDiag -> modelo : Reintentar 1 vez
+    activate modelo
+    modelo --> agDiag : respuesta corregida
+    deactivate modelo
+    agDiag -> agDiag : validar() de nuevo
+    alt Falla de nuevo
+        agDiag -> agDiag : Usar texto de respaldo
+    end
+end
+
+agDiag --> orq : Diagnostico con\nRecomendaciones ordenadas
+deactivate agDiag
+
+frontend <-- api : progreso: "Analizando tus procesos..."
+usuario <-- frontend : Mensaje de progreso
+
+== CU-4: Recomendar apoyos (Agente de apoyos) ==
+
+orq -> agAp : ejecutar(perfil, diagnostico)
+activate agAp
+
+agAp -> agAp : recolectar()
+agAp -> catalogo : filtrar("Jalisco", "micro", procesos_recomendados)
+activate catalogo
+catalogo --> agAp : programas_candidatos\n(máx. 5–8 del JSON)
+deactivate catalogo
+
+agAp -> agAp : razonar()
+agAp -> modelo : generar(prompt_apoyos,\nprogramas_candidatos)
+activate modelo
+note right of modelo
+  "De estos programas, elige 1 a 3
+  que mejor apliquen. Responde SOLO
+  con los IDs del catálogo."
+end note
+modelo --> agAp : IDs seleccionados
+deactivate modelo
+
+agAp -> agAp : validar()\n**Descartar IDs que no\nexisten en el catálogo**
+agAp -> catalogo : obtener_por_id(cada ID)
+activate catalogo
+catalogo --> agAp : ProgramaApoyo o None
+deactivate catalogo
+
+agAp --> orq : lista de ProgramaApoyo válidos
+deactivate agAp
+
+frontend <-- api : progreso: "Buscando apoyos..."
+usuario <-- frontend : Mensaje de progreso
+
+== CU-5: Generar reporte (Constructor de reporte) ==
+
+orq -> builder : ConstructorReporte(diagnostico)
+activate builder
+orq -> builder : con_portada()
+orq -> builder : con_resumen()
+orq -> builder : con_zona()
+orq -> builder : con_procesos()
+orq -> builder : con_apoyos()
+orq -> builder : con_fuentes()
+orq -> builder : construir()
+builder --> orq : Reporte (HTML → PDF)
+deactivate builder
+
+orq --> api : Diagnostico completo + PDF
+deactivate orq
+
+api --> frontend : JSON con resultados + URL del PDF
+deactivate api
+
+frontend -> frontend : Mostrar resultados:\nsemáforo de procesos,\n3 prioridades, zona, apoyos
+
+frontend -> frontend : Mostrar aviso:\n"Este diagnóstico es orientativo.\nConfirma requisitos y fechas\nen la fuente oficial."
+
+usuario <-- frontend : Pantalla de resultados
+
+usuario -> frontend : Clic "Descargar mi reporte (PDF)"
+frontend -> api : GET /reporte/{id}
+api --> frontend : archivo PDF
+frontend --> usuario : Descarga PDF (2–4 páginas)
+deactivate frontend
+
+@enduml

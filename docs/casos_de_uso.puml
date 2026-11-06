@@ -1,0 +1,71 @@
+@startuml DigiPyme_CasosDeUso
+' Diagrama de Casos de Uso – DigiPyme
+' Hackathon Agéntico SoftwareChido 2026B
+' Materia: Diseño de Software, ITESO
+
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam backgroundColor white
+skinparam shadowing false
+
+left to right direction
+
+actor "Dueño del\nnegocio" as dueno <<Usuario principal>>
+actor "API DENUE\n(INEGI)" as denue <<Sistema externo>>
+actor "Ollama\n(Modelo local)" as ollama <<Sistema externo>>
+
+rectangle "DigiPyme – Diagnóstico de digitalización para MIPYMES" {
+
+    usecase "CU-1: Registrar perfil\ndel negocio" as CU1
+    usecase "CU-2: Consultar negocios\nsimilares en la zona" as CU2
+    usecase "CU-3: Generar diagnóstico\nde digitalización" as CU3
+    usecase "CU-4: Recomendar apoyos\ny programas públicos" as CU4
+    usecase "CU-5: Generar y descargar\nreporte de diagnóstico" as CU5
+
+    ' --- Relaciones del actor principal ---
+    dueno --> CU1
+    dueno --> CU5
+
+    ' --- Inclusiones ---
+    CU5 ..> CU2 : <<include>>
+    CU5 ..> CU3 : <<include>>
+    CU5 ..> CU4 : <<include>>
+    CU3 ..> CU2 : <<include>>
+    CU4 ..> CU3 : <<include>>
+    CU2 ..> CU1 : <<include>>
+
+    ' --- Actores secundarios ---
+    denue <-- CU2
+    ollama <-- CU2
+    ollama <-- CU3
+    ollama <-- CU4
+}
+
+note bottom of CU1
+  Cuestionario guiado en 3 pantallas:
+  "Tu negocio", "Dónde estás", "Cómo operas hoy".
+  Máximo 15 preguntas de opción múltiple.
+  Sin cuenta ni base de datos (D-10).
+end note
+
+note right of CU3
+  Fórmula de prioridad (código, no modelo):
+  prioridad = (3 − nivel_actual) × impacto_giro
+  El modelo solo redacta la razón
+  y el primer paso (D-8).
+end note
+
+note right of CU4
+  El modelo solo puede devolver IDs
+  del catálogo curado. Un validador
+  descarta IDs inexistentes (D-9).
+end note
+
+note bottom of CU5
+  PDF de 2–4 páginas con:
+  perfil, zona, procesos priorizados,
+  apoyos y aviso orientativo.
+  Patrón Builder.
+end note
+
+@enduml

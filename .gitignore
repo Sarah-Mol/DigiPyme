@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+venv/
+.venv/
+
+# Node / Frontend
+node_modules/
+frontend/dist/
+
+# Entorno
+.env
+
+# Cache DENUE
+backend/datos/cache_denue/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db

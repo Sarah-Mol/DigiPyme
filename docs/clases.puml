@@ -1,0 +1,245 @@
+@startuml DigiPyme_Clases
+' Diagrama de Clases – DigiPyme
+' Patrones: Strategy, Adapter, Proxy, Façade, Template Method, Builder
+' Principios: SRP, OCP, DIP, LSP
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+' ===================== INTERFACES =====================
+
+interface ProveedorModelo <<Strategy>> {
+    + generar(prompt: str, contexto: str): str
+}
+
+interface FuenteUnidadesEconomicas <<DIP>> {
+    + cuantificar(clave_municipio: str, clase_scian: str): int
+    + buscar_area(clave_municipio: str, clase_scian: str): list[dict]
+}
+
+interface CatalogoApoyos <<DIP>> {
+    + filtrar(estado: str, tamano: str, procesos: list[str]): list[ProgramaApoyo]
+    + obtener_por_id(id_programa: str): ProgramaApoyo | None
+}
+
+' ===================== ENTIDADES DEL DOMINIO =====================
+
+enum NivelMadurez {
+    NO_SE_LLEVA = 0
+    PAPEL = 1
+    DIGITAL_AISLADO = 2
+    DIGITAL_INTEGRADO = 3
+}
+
+class Giro {
+    + nombre: str
+    + clase_scian: str
+    + impactos: dict[str, int]
+}
+
+class Ubicacion {
+    + estado: str
+    + municipio: str
+    + clave_municipio: str
+}
+
+class EvaluacionProceso {
+    + proceso: str
+    + nivel: NivelMadurez
+}
+
+class PerfilNegocio {
+    + giro: Giro
+    + tamano: str
+    + ubicacion: Ubicacion
+    + evaluaciones: list[EvaluacionProceso]
+}
+
+class ResumenZona {
+    + total_similares: int
+    + distribucion_tamano: dict[str, int]
+    + con_sitio_web: int
+    + con_correo: int
+    + texto_resumen: str
+}
+
+class Recomendacion {
+    + proceso: str
+    + prioridad: float
+    + razon: str
+    + primer_paso: str
+    + fuente: str
+}
+
+class ProgramaApoyo {
+    + id_programa: str
+    + nombre: str
+    + dependencia: str
+    + beneficio: str
+    + requisitos: str
+    + vigencia: str
+    + url: str
+    + fecha_verificacion: str
+}
+
+class Diagnostico {
+    + perfil: PerfilNegocio
+    + resumen_zona: ResumenZona
+    + recomendaciones: list[Recomendacion]
+    + apoyos: list[ProgramaApoyo]
+    + fecha: str
+    + aviso: str
+}
+
+class Reporte {
+    + diagnostico: Diagnostico
+    + contenido_html: str
+    + generar_pdf(): bytes
+}
+
+' ===================== RELACIONES DE ENTIDADES =====================
+
+PerfilNegocio *-- "1" Ubicacion : composición
+PerfilNegocio *-- "1..6" EvaluacionProceso : composición
+PerfilNegocio --> "1" Giro : asociación
+Diagnostico *-- "1..6" Recomendacion : composición
+Diagnostico o-- "0..*" ProgramaApoyo : agregación
+Diagnostico --> "1" PerfilNegocio
+Diagnostico --> "1" ResumenZona
+Reporte --> "1" Diagnostico
+
+' ===================== AGENTES (Template Method) =====================
+
+abstract class Agente <<Template Method>> {
+    # proveedor: ProveedorModelo
+    + ejecutar(entrada: dict): dict
+    # {abstract} recolectar(entrada: dict): dict
+    # {abstract} razonar(datos: dict): dict
+    # {abstract} validar(resultado: dict): dict
+}
+
+class AgenteContexto {
+    - fuente: FuenteUnidadesEconomicas
+    # recolectar(entrada: dict): dict
+    # razonar(datos: dict): dict
+    # validar(resultado: dict): dict
+}
+
+class AgenteDiagnostico {
+    # recolectar(entrada: dict): dict
+    # razonar(datos: dict): dict
+    # validar(resultado: dict): dict
+}
+
+class AgenteApoyos {
+    - catalogo: CatalogoApoyos
+    # recolectar(entrada: dict): dict
+    # razonar(datos: dict): dict
+    # validar(resultado: dict): dict
+}
+
+Agente <|-- AgenteContexto
+Agente <|-- AgenteDiagnostico
+Agente <|-- AgenteApoyos
+Agente --> ProveedorModelo : usa (composición)
+AgenteContexto --> FuenteUnidadesEconomicas : usa (composición)
+AgenteApoyos --> CatalogoApoyos : usa (composición)
+
+' ===================== SERVICIOS =====================
+
+class ProveedorOllama <<Strategy>> {
+    - url_base: str
+    - modelo: str
+    + generar(prompt: str, contexto: str): str
+}
+
+class ProveedorFalso <<Strategy / LSP>> {
+    - respuestas: dict[str, str]
+    + generar(prompt: str, contexto: str): str
+}
+
+class AdaptadorDENUE <<Adapter>> {
+    - token: str
+    - url_base: str
+    + cuantificar(clave_municipio: str, clase_scian: str): int
+    + buscar_area(clave_municipio: str, clase_scian: str): list[dict]
+}
+
+class ProxyCacheDENUE <<Proxy / OCP>> {
+    - adaptador: AdaptadorDENUE
+    - cache: dict
+    + cuantificar(clave_municipio: str, clase_scian: str): int
+    + buscar_area(clave_municipio: str, clase_scian: str): list[dict]
+}
+
+class CatalogoApoyosJSON {
+    - ruta_archivo: str
+    - programas: list[ProgramaApoyo]
+    + filtrar(estado: str, tamano: str, procesos: list[str]): list[ProgramaApoyo]
+    + obtener_por_id(id_programa: str): ProgramaApoyo | None
+}
+
+class ConstructorReporte <<Builder>> {
+    - diagnostico: Diagnostico
+    + con_portada(): ConstructorReporte
+    + con_resumen(): ConstructorReporte
+    + con_zona(): ConstructorReporte
+    + con_procesos(): ConstructorReporte
+    + con_apoyos(): ConstructorReporte
+    + con_fuentes(): ConstructorReporte
+    + construir(): Reporte
+}
+
+ProveedorModelo <|.. ProveedorOllama
+ProveedorModelo <|.. ProveedorFalso
+FuenteUnidadesEconomicas <|.. AdaptadorDENUE
+FuenteUnidadesEconomicas <|.. ProxyCacheDENUE
+ProxyCacheDENUE --> AdaptadorDENUE : delega
+CatalogoApoyos <|.. CatalogoApoyosJSON
+ConstructorReporte --> Diagnostico
+ConstructorReporte ..> Reporte : crea
+
+' ===================== ORQUESTADOR (Façade) =====================
+
+class Orquestador <<Façade>> {
+    - agente_contexto: AgenteContexto
+    - agente_diagnostico: AgenteDiagnostico
+    - agente_apoyos: AgenteApoyos
+    - constructor: ConstructorReporte
+    + diagnosticar(perfil: PerfilNegocio): Diagnostico
+}
+
+Orquestador *-- AgenteContexto : composición
+Orquestador *-- AgenteDiagnostico : composición
+Orquestador *-- AgenteApoyos : composición
+Orquestador --> ConstructorReporte : usa
+
+' ===================== NOTAS =====================
+
+note top of Agente
+  Template Method: ejecutar() define
+  el algoritmo: recolectar → razonar → validar.
+  Las subclases implementan cada paso.
+end note
+
+note right of ProveedorOllama
+  Strategy: cambiar modelo
+  = cambiar configuración,
+  0 líneas en los agentes.
+end note
+
+note left of ProxyCacheDENUE
+  Proxy de caché: OCP.
+  Se agrega sin cambiar
+  el AdaptadorDENUE.
+end note
+
+note bottom of Orquestador
+  Façade: la API llama
+  diagnosticar(perfil)
+  sin conocer a cada agente.
+end note
+
+@enduml

@@ -1,0 +1,82 @@
+[
+  {
+    "id_programa": "SE-PAGOS-2026",
+    "nombre": "Crece tu Mipyme con pagos digitales",
+    "dependencia": "Secretaría de Economía / Visa",
+    "beneficio": "Habilitación gratuita de terminales de pago digital para MIPYMES. El negocio se registra y un proveedor lo contacta.",
+    "requisitos": "Ser MIPYME en México. Registrarse en mipymes.economia.gob.mx/pagos_digitales.php.",
+    "vigencia": "Activo (primera fase en 2026; superó 1 millón de negocios en septiembre de 2026)",
+    "url": "https://mipymes.economia.gob.mx/pagos_digitales.php",
+    "fecha_verificacion": "4 de noviembre de 2026"
+  },
+  {
+    "id_programa": "SEDECO-DIGITALIZA-2026",
+    "nombre": "Jalisco Digitaliza Mipymes",
+    "dependencia": "SEDECO Jalisco",
+    "beneficio": "Hasta $150,000 por proyecto para digitalización de MIPYMES en Jalisco.",
+    "requisitos": "MIPYME en Jalisco. Diagnóstico 'Impulso Digital Empresarial' en ID Empresa.",
+    "vigencia": "Convocatoria 2026 cerrada (27 abr – 14 may). Próxima convocatoria por confirmar.",
+    "url": "https://tepatitlan.gob.mx/promocioneconomica/programas/",
+    "fecha_verificacion": "4 de noviembre de 2026"
+  },
+  {
+    "id_programa": "SAT-CFDI-40",
+    "nombre": "Servicio gratuito de facturación CFDI 4.0",
+    "dependencia": "SAT",
+    "beneficio": "Facturas electrónicas sin costo y app Factura SAT Móvil.",
+    "requisitos": "RFC y contraseña o e.firma.",
+    "vigencia": "Disponible de forma permanente",
+    "url": "https://wwwmat.sat.gob.mx/aplicacion/75169/servicio-de-facturacion-cfdi-version-4.0-(vigente-a-partir-del-1-de-enero-de-2022)",
+    "fecha_verificacion": "4 de noviembre de 2026"
+  },
+  {
+    "id_programa": "SEDECO-BANAMEX-2026",
+    "nombre": "Convenio SEDECO–Banamex para MIPYMES",
+    "dependencia": "SEDECO Jalisco / Banamex",
+    "beneficio": "Créditos con tasas preferenciales, terminales de pago, banca en línea y educación financiera para MIPYMES de Jalisco (código promocional 'Jalisco').",
+    "requisitos": "Ser MIPYME en Jalisco.",
+    "vigencia": "Vigente durante 2026",
+    "url": "https://jaliscotv.com/?p=149267",
+    "fecha_verificacion": "4 de noviembre de 2026"
+  },
+  {
+    "id_programa": "SE-MIPYMESMX",
+    "nombre": "Plataforma MIPYMESMX",
+    "dependencia": "Secretaría de Economía",
+    "beneficio": "Autodiagnóstico y cursos gratuitos de comercio electrónico, marketing digital, contabilidad y ciberseguridad.",
+    "requisitos": "Registrarse en la plataforma.",
+    "vigencia": "Activa",
+    "url": "https://mipymes.economia.gob.mx/",
+    "fecha_verificacion": "4 de noviembre de 2026"
+  },
+  {
+    "id_programa": "NAFIN-BANCOMEXT-2026",
+    "nombre": "Estrategia de crédito Nafin–Bancomext 2026",
+    "dependencia": "Nafin / Bancomext",
+    "beneficio": "Créditos a través de la banca comercial, con garantías de hasta 80% en primeros créditos de hasta $5 millones.",
+    "requisitos": "Solicitar en bancos participantes.",
+    "vigencia": "Anunciada el 4 de febrero de 2026; activa",
+    "url": "https://www.nafin.com/portalnf/files/secciones/sala-prensa/comunicados-pdf/2026/2-Comunicado_Impulso_a_la_Inversion.pdf",
+    "fecha_verificacion": "4 de noviembre de 2026"
+  },
+  {
+    "id_programa": "COECYTJAL-TRANSDIG-2026",
+    "nombre": "Transformación Digital de Jalisco",
+    "dependencia": "COECYTJAL",
+    "beneficio": "Hasta $50,000 a $60,000 por empresa para proyectos de digitalización.",
+    "requisitos": "MIPYME en Jalisco.",
+    "vigencia": "Convocatoria 2026 cerrada (27 mar – 10 jun). Próxima convocatoria por confirmar.",
+    "url": "https://misprogramas.jalisco.gob.mx/programas/reporte/fichaBasica/779",
+    "fecha_verificacion": "4 de noviembre de 2026"
+  },
+  {
+    "id_programa": "SEDECO-PRODEJAL-2026",
+    "nombre": "PRODEJAL",
+    "dependencia": "SEDECO Jalisco",
+    "beneficio": "Consultoría empresarial con valor cercano a $145,000 por empresa.",
+    "requisitos": "Preregistro en el programa.",
+    "vigencia": "Convocatoria 2026 cerrada (preregistro hasta 15 ago). Próxima convocatoria por confirmar.",
+    "url": "https://sedeco.jalisco.gob.mx/",
+    "fecha_verificacion": "4 de noviembre de 2026"
+  }
+]

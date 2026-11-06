@@ -1,0 +1,86 @@
+@startuml DigiPyme_Componentes
+' Diagrama de Componentes – DigiPyme
+' Arquitectura en 4 capas
+' Hackathon Agéntico SoftwareChido 2026B
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam componentStyle uml2
+skinparam linetype ortho
+
+package "Capa 1 – Interfaz web\n[TypeScript, React, Vite]" as capa1 {
+    [Cuestionario guiado] as cuestionario
+    [Pantalla de progreso] as progreso
+    [Pantalla de resultados] as resultados
+    [Descarga de reporte] as descarga
+}
+
+package "Capa 2 – API del backend\n[Python, FastAPI]" as capa2 {
+    [API REST] as api
+    note right of api
+      POST /diagnostico
+      Recibe PerfilNegocio,
+      devuelve Diagnostico completo
+    end note
+}
+
+package "Capa 3 – Orquestación y agentes\n[Python, clases propias]" as capa3 {
+    [Orquestador\n«Façade»] as orquestador
+    [Agente de contexto\n«Template Method»] as agContexto
+    [Agente de diagnóstico\n«Template Method»] as agDiagnostico
+    [Agente de apoyos\n«Template Method»] as agApoyos
+    [Constructor de reporte\n«Builder»] as constructor
+}
+
+package "Capa 4 – Servicios externos y datos" as capa4 {
+    [Adaptador DENUE\n«Adapter»] as adaptador
+    [Proxy de caché\n«Proxy»] as cache
+    [Catálogo de apoyos\n(JSON)] as catalogo
+    [Proveedor de modelo\n«Strategy»] as proveedor
+    database "API DENUE\n(INEGI)" as apiDenue
+    component "Ollama local" as ollama
+}
+
+' --- Conexiones capa 1 → capa 2 ---
+cuestionario --> api : HTTP POST
+progreso --> api : HTTP GET (estado)
+resultados --> api : HTTP GET
+descarga --> api : HTTP GET (PDF)
+
+' --- Conexiones capa 2 → capa 3 ---
+api --> orquestador : diagnosticar(perfil)
+
+' --- Orquestador → agentes (composición) ---
+orquestador --> agContexto : ejecutar()
+orquestador --> agDiagnostico : ejecutar()
+orquestador --> agApoyos : ejecutar()
+orquestador --> constructor : construir()
+
+' --- Agentes → capa 4 (DIP: dependen de interfaces) ---
+agContexto --> adaptador : <<FuenteUnidadesEconomicas>>
+agContexto --> proveedor : <<ProveedorModelo>>
+agDiagnostico --> proveedor : <<ProveedorModelo>>
+agApoyos --> catalogo : <<CatalogoApoyos>>
+agApoyos --> proveedor : <<ProveedorModelo>>
+constructor ..> resultados : Reporte PDF
+
+' --- Capa 4 interna ---
+adaptador --> cache : consultar
+cache --> apiDenue : si no hay caché
+proveedor --> ollama : API HTTP local
+
+note bottom of capa3
+  Cada agente sigue el Template Method:
+  ejecutar() → recolectar() → razonar() → validar()
+  Composición: el orquestador "tiene" agentes;
+  cada agente "tiene" proveedor y fuentes.
+end note
+
+note bottom of capa4
+  Strategy: cambiar modelo = cambiar configuración.
+  Adapter: JSON del INEGI → ResumenZona.
+  Proxy: caché para repetir demo sin conexión.
+  DIP: agentes dependen de interfaces, no de la API.
+end note
+
+@enduml
