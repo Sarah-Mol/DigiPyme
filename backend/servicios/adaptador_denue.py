@@ -30,25 +30,39 @@ class AdaptadorDENUE(FuenteUnidadesEconomicas):
         self._token = token or os.getenv("DENUE_TOKEN", "")
 
     def cuantificar(self, clave_municipio: str, clase_scian: str) -> int:
-        """Cuenta unidades económicas usando el método Cuantificar del DENUE."""
+        """Cuenta unidades económicas usando el método Cuantificar del DENUE.
+
+        URL: Cuantificar/{actividad}/{area_geografica}/{estrato}/{token}
+        """
         url = (
             f"{self.URL_BASE}/Cuantificar/{clase_scian}/{clave_municipio}"
-            f"/0/0/0/{self._token}"
+            f"/0/{self._token}"
         )
         try:
             resp = httpx.get(url, timeout=30.0)
             resp.raise_for_status()
+            datos = resp.json()
+            if isinstance(datos, list) and datos:
+                return int(datos[0].get("Total", 0))
             return int(resp.text.strip().strip('"'))
-        except (httpx.HTTPError, ValueError):
+        except (httpx.HTTPError, ValueError, KeyError):
             return 0
 
     def buscar_area(
         self, clave_municipio: str, clase_scian: str
     ) -> list[dict[str, Any]]:
-        """Busca establecimientos usando BuscarAreaActEstr del DENUE."""
+        """Busca establecimientos usando BuscarAreaActEstr del DENUE.
+
+        URL: BuscarAreaActEstr/{entidad}/{municipio}/{localidad}/{AGEB}/{manzana}/
+             {sector}/{subsector}/{rama}/{clase}/{nombre}/{reg_ini}/{reg_fin}/
+             {id}/{estrato}/{token}
+        La clave_municipio viene como "14098" → entidad=14, municipio=098.
+        """
+        entidad = clave_municipio[:2]
+        municipio = clave_municipio[2:]
         url = (
-            f"{self.URL_BASE}/BuscarAreaActEstr/{clase_scian}/{clave_municipio}"
-            f"/0/0/0/0/0/1/50/{self._token}"
+            f"{self.URL_BASE}/BuscarAreaActEstr/{entidad}/{municipio}"
+            f"/0/0/0/0/0/0/{clase_scian}/0/1/50/0/0/{self._token}"
         )
         try:
             resp = httpx.get(url, timeout=30.0)
